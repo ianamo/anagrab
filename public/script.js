@@ -33,7 +33,14 @@ function initWord(str) { // set up a new word on the page
     letterTile.innerHTML = str[i];
     letterTile.id = i;
     letterTile.setAttribute("draggable","true");
-    letterTile.setAttribute("ondragstart","drag(event)");    
+    letterTile.setAttribute("ondragstart","drag(event)");
+    letterTile.addEventListener("click", function () {
+      if (this.parentElement.parentElement.id=='word-row'){
+        move(this,document.querySelectorAll('#entry-row .empty-box'));
+      }else {
+        move(this,document.querySelectorAll('#word-row .empty-box'));
+      }
+    });    
     squareBox.appendChild(letterTile); 
     row.appendChild(squareBox); // add it all to row
     
@@ -46,6 +53,19 @@ function initWord(str) { // set up a new word on the page
     allBlanks[j].setAttribute("ondrop","drop(event)");
     allBlanks[j].setAttribute("ondragover","allowDrop(event)");
   }
+}
+
+function firstEmpty(searchRow) { // find first empty node
+  for (const el of searchRow) {
+    if (el.firstChild==null){
+      return el;
+    }
+  }
+}
+
+function move (element, toRow) {
+  var destination = firstEmpty(toRow);
+  destination.appendChild(element);
 }
 
 function getWord() { // "read" the word on the entry row
