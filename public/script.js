@@ -49,9 +49,9 @@ function initWord(str) { // set up a new word on the page
     entry.appendChild(blank);
   }
   allBlanks = document.querySelectorAll('.empty-box');
-  for (let j = 0;j<allBlanks.length;j++){
-    allBlanks[j].setAttribute("ondrop","drop(event)");
-    allBlanks[j].setAttribute("ondragover","allowDrop(event)");
+  for (var blank of allBlanks){
+    blank.setAttribute("ondrop","drop(event)");
+    blank.setAttribute("ondragover","allowDrop(event)");
   }
 }
 
@@ -69,12 +69,8 @@ function move (element, toRow) {
 }
 
 function getWord() { // "read" the word on the entry row
-  let entryWord = "";
-  var tiles = document.querySelectorAll('#entry-row .letter-box');
-  for (let k =0;k<tiles.length;k++) {
-    entryWord = entryWord + tiles[k].innerHTML;
-  }
-  return entryWord;
+  const tiles = Array.from(document.querySelectorAll('#entry-row .letter-box'), c=>c.innerHTML);
+  return tiles.join('');
 }
 
 function logWord(bool) { // if word exists, clear it out; if all tiles have been used, get a new word
@@ -100,14 +96,14 @@ function clearRows () { // clear everything away to prepare for new word
 
 function clearTiles() { // get rid of tiles in entry row
   let letterBoxes = document.querySelectorAll("#entry-row .empty-box");
-  for (let n=0;n<letterBoxes.length;n++) {
-    if (letterBoxes[n].firstChild){
-    letterBoxes[n].removeChild(letterBoxes[n].firstChild);
+  for (var box of letterBoxes) {
+    if (box.firstChild){
+    box.removeChild(box.firstChild);
     }
   }
 }
 
-function countTiles () { // count orphaned tiles
+function countTiles () { // count tiles
   return document.querySelectorAll('.letter-box').length;
 }
 
@@ -148,13 +144,11 @@ function checkWord() { // communicate with backend to see if word exists
 }
 
 function isEmpty () { // have all our word's tiles been used?
-  let wordTiles = document.querySelectorAll('#word-row .empty-box');
-  for (let x=0; x<wordTiles.length;x++) {
-    if (wordTiles[x].firstChild) {
-      return false;
-    }
+  if (countTiles()>0) {
+    return false;
+  } else {
+    return true;
   }
-  return true;
 }
 
 // drag & drop  functionality for tiles
