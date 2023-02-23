@@ -1,4 +1,4 @@
-var dict = ['envelope','amazing','remarkable','evidence','lucrative','suspect','feigned','malevolent','harmonious','sympathetic','musical','impertinent','salacious','fiendish','expose','redeem','fallow','specter','phantasm','geography','wonder','morose','cackle','careen','muddle','murmur','galosh','shimmer','candid','senator','callow','mindful','museum','mockery','pestiferous','courage','merciful','clever','connect','spurious','gnostic','deciduous','debacle','nervous','tyranny','computer','falafel','mimetic','special','vacuous','crusader','philosopher','marrow','dialect','phenomenon','biblical','atavistic','leonine','carnivorous','evaluate','calligraphy','voltage','radish','pillory','quadrilateral','connive','smuggler','vivacious','resurrection','chronology','galvanize','didactic','nihilist','automotive','alleviate','cacophany','commodious','capacious','designer','hindsight','archeology','equestrian'];
+import {dict} from "./words.js";
 let words = [];
 let row = document.getElementById('word-row');
 let entry = document.getElementById('entry-row');
@@ -15,9 +15,13 @@ function newWord() { // get a new word from the stack, or else game is over
 }
 
 function loadDict() {
-  while (words.length<5) {
-    words.push(dict[Math.floor(Math.random() * dict.length)]);
-  }
+  const day = new Date().getDate();
+  words = dict[day-1];
+}
+
+function formatTimer(seconds){
+  let formatStr = "";
+  return (seconds < 60 ? seconds.toLocaleString('en-us',{minimumIntegerDigits:2}) : (Math.floor(seconds/60).toLocaleString('en-us',{minimumIntegerDigits:2}) + ":" + (seconds%60).toLocaleString('en-us',{minimumIntegerDigits:2})));
 }
 
 function initWord(str) { // set up a new word on the page
@@ -48,7 +52,7 @@ function initWord(str) { // set up a new word on the page
     blank.className = 'empty-box';
     entry.appendChild(blank);
   }
-  allBlanks = document.querySelectorAll('.empty-box');
+  var allBlanks = document.querySelectorAll('.empty-box');
   for (var blank of allBlanks){
     blank.setAttribute("ondrop","drop(event)");
     blank.setAttribute("ondragover","allowDrop(event)");
@@ -112,7 +116,7 @@ function refresh() { // assess penalty if needed and set up next word
   if (penalty>0) {
     timer += penalty * 15;
     orphans += penalty;
-    document.getElementById('timer').innerHTML = timer;
+    document.getElementById('timer').innerHTML = formatTimer(timer);
   }
   if (words[0]) {
     clearRows();
@@ -120,7 +124,7 @@ function refresh() { // assess penalty if needed and set up next word
   } else {
     clearRows();
     gameOver = true;
-    document.getElementById('description').innerHTML = "Your time was: "+(Math.floor(timer/60)).toString()+' minutes, '+(timer%60).toString()+' seconds. You had '+orphans+' orphan tiles, for a total penalty of '+(orphans*15).toString()+' penalty seconds.';
+    document.getElementById('description').innerHTML = "Your time was: "+formatTimer(timer)+'. You had '+orphans+' orphan tiles, for a total penalty of '+(orphans*15).toString()+' penalty seconds.';
   }
 }
 
@@ -144,11 +148,7 @@ function checkWord() { // communicate with backend to see if word exists
 }
 
 function isEmpty () { // have all our word's tiles been used?
-  if (countTiles()>0) {
-    return false;
-  } else {
-    return true;
-  }
+  return (countTiles()==0);
 }
 
 // drag & drop  functionality for tiles
@@ -176,7 +176,7 @@ function beginGame () {
   setInterval(function() { // initialize our timer
     if (gameOver==false) {
       timer++;
-      document.getElementById('timer').innerHTML = timer;
+      document.getElementById('timer').innerHTML = formatTimer(timer);
       }
     },"1000");
 }
