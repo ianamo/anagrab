@@ -2,10 +2,10 @@ import {dict} from "./words.js";
 let words = [];
 let row = document.getElementById('word-row');
 let entry = document.getElementById('entry-row');
-let gameOver = false;
 let timer = 0;
 let orphans = 0;
 let currentWord = "";
+var myInterval = null;
 
 // Functions
 
@@ -20,7 +20,6 @@ function loadDict() {
 }
 
 function formatTimer(seconds){
-  let formatStr = "";
   return (seconds < 60 ? seconds.toLocaleString('en-us',{minimumIntegerDigits:2}) : (Math.floor(seconds/60).toLocaleString('en-us',{minimumIntegerDigits:2}) + ":" + (seconds%60).toLocaleString('en-us',{minimumIntegerDigits:2})));
 }
 
@@ -38,13 +37,15 @@ function initWord(str) { // set up a new word on the page
     letterTile.id = i;
     letterTile.setAttribute("draggable","true");
     letterTile.setAttribute("ondragstart","drag(event)");
-    letterTile.addEventListener("click", function () {
+    
+    letterTile.addEventListener("click", function () { // enable click to move tile
       if (this.parentElement.parentElement.id=='word-row'){
         move(this,document.querySelectorAll('#entry-row .empty-box'));
       }else {
         move(this,document.querySelectorAll('#word-row .empty-box'));
       }
     });    
+    
     squareBox.appendChild(letterTile); 
     row.appendChild(squareBox); // add it all to row
     
@@ -52,7 +53,7 @@ function initWord(str) { // set up a new word on the page
     blank.className = 'empty-box';
     entry.appendChild(blank);
   }
-  var allBlanks = document.querySelectorAll('.empty-box');
+  var allBlanks = document.querySelectorAll('.empty-box'); // all boxes need drag & drop functions
   for (var blank of allBlanks){
     blank.setAttribute("ondrop","drop(event)");
     blank.setAttribute("ondragover","allowDrop(event)");
@@ -107,23 +108,23 @@ function clearTiles() { // get rid of tiles in entry row
   }
 }
 
-function countTiles () { // count tiles
+function countTiles () { 
   return document.querySelectorAll('.letter-box').length;
 }
 
-function refresh() { // assess penalty if needed and set up next word
+function refresh() { // assess penalty if needed and set up next word; if no next word, end game
+  console.log("refresh");
   let penalty = countTiles();
   if (penalty>0) {
     timer += penalty * 15;
     orphans += penalty;
     document.getElementById('timer').innerHTML = formatTimer(timer);
   }
+  clearRows();
   if (words[0]) {
-    clearRows();
     initWord(newWord());  
   } else {
-    clearRows();
-    gameOver = true;
+    clearInterval(myInterval);
     document.getElementById('description').innerHTML = "Your time was: "+formatTimer(timer)+'. You had '+orphans+' orphan tiles, for a total penalty of '+(orphans*15).toString()+' penalty seconds.';
   }
 }
@@ -168,26 +169,25 @@ function drop(ev) {
  ev.target.appendChild(myDropper);
 }
 
+// game setup functions
+
+function myTimer () {
+  timer++;
+  document.getElementById('timer').innerHTML = formatTimer(timer);
+}
+
 function beginGame () {
   loadDict();
   document.querySelector('.timer-score-box').classList.remove("hidden");
   document.getElementById('start-btn').classList.add('hidden');
   initWord(newWord());
-  setInterval(function() { // initialize our timer
-    if (gameOver==false) {
-      timer++;
-      document.getElementById('timer').innerHTML = formatTimer(timer);
-      }
-    },"1000");
+  myInterval = setInterval(myTimer,"1000");
 }
+
+
 
 // UI
 
 document.getElementById('start-btn').addEventListener('click',beginGame);
-
-
-const enterButton = document.getElementById('enter-btn');
-enterButton.addEventListener('click', checkWord);
-
-const passButton = document.getElementById('pass-btn');
-passButton.addEventListener('click', refresh);
+document.getElementById('enter-btn').addEventListener('click', checkWord);
+document.getElementById('pass-btn')passButton.addEventListener('click', refresh);
