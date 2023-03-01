@@ -1,4 +1,7 @@
 import {dict} from "./words.js";
+
+// global variables
+
 let words = [];
 let row = document.getElementById('word-row');
 let entry = document.getElementById('entry-row');
@@ -6,17 +9,26 @@ let timer = 0;
 let orphans = 0;
 let currentWord = "";
 var myInterval = null;
+const date = new Date().getDate();
 
 // Functions
 
-function newWord() { // get a new word from the stack, or else game is over
+function anaString() {
+  return ("ANAGRAB("+date.toString()+") ⏲️"+formatTimer(timer)+' 🙁'+orphans.toString());
+}
+
+function myTimer () {
+  timer++;
+  document.getElementById('timer').innerHTML = formatTimer(timer);
+}
+
+function newWord() { // get a new word from the stack, keep track of what word we are currently using
   currentWord = words.pop();
   return currentWord;
 }
 
 function loadDict() {
-  const day = new Date().getDate();
-  words = dict[day-1];
+  words = dict[date-1];
 }
 
 function formatTimer(seconds){
@@ -112,21 +124,43 @@ function countTiles () {
   return document.querySelectorAll('.letter-box').length;
 }
 
-function refresh() { // assess penalty if needed and set up next word; if no next word, end game
-  console.log("refresh");
-  let penalty = countTiles();
-  if (penalty>0) {
-    timer += penalty * 15;
-    orphans += penalty;
-    document.getElementById('timer').innerHTML = formatTimer(timer);
-  }
-  clearRows();
-  if (words[0]) {
-    initWord(newWord());  
-  } else {
-    clearInterval(myInterval);
-    document.getElementById('description').innerHTML = "Your time was: "+formatTimer(timer)+'. You had '+orphans+' orphan tiles, for a total penalty of '+(orphans*15).toString()+' penalty seconds.';
-  }
+function isEmpty () { // have all our word's tiles been used?
+  return (countTiles()==0);
+}
+
+function randWord () { // interact with server to get random word
+  fetch('/randword/', {
+    method: 'GET',
+
+  }).then(response => response.json())
+    .then(response => {console.log((JSON.stringify(response.random)))});
+}
+
+// drag & drop  functionality for tiles
+
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev) {
+  ev.preventDefault();
+  var data = ev.dataTransfer.getData("text");
+ const myDropper = document.getElementById(data);
+ ev.target.appendChild(myDropper);
+}
+
+// button UI functions
+
+function beginGame () {
+  loadDict();
+  document.querySelector('.timer-score-box').classList.remove("hidden");
+  document.getElementById('start-btn').classList.add('hidden');
+  initWord(newWord());
+  myInterval = setInterval(myTimer,"1000");
 }
 
 function checkWord() { // communicate with backend to see if word exists
@@ -148,46 +182,30 @@ function checkWord() { // communicate with backend to see if word exists
   }
 }
 
-function isEmpty () { // have all our word's tiles been used?
-  return (countTiles()==0);
+function refresh() { // assess penalty if needed and set up next word; if no next word, end game
+  let penalty = countTiles();
+  if (penalty>0) {
+    timer += penalty * 15;
+    orphans += penalty;
+    document.getElementById('timer').innerHTML = formatTimer(timer);
+  }
+  clearRows();
+  if (words[0]) {
+    initWord(newWord());  
+  } else {
+    clearInterval(myInterval);
+    document.getElementById('description').innerHTML = anaString();
+    document.getElementById('copy-btn').classList.remove('hidden');
+  }
 }
-
-// drag & drop  functionality for tiles
-
-function allowDrop(ev) {
-  ev.preventDefault();
-}
-
-function drag(ev) {
-  ev.dataTransfer.setData("text", ev.target.id);
-}
-
-function drop(ev) {
-  ev.preventDefault();
-  var data = ev.dataTransfer.getData("text");
- const myDropper = document.getElementById(data);
- ev.target.appendChild(myDropper);
-}
-
-// game setup functions
-
-function myTimer () {
-  timer++;
-  document.getElementById('timer').innerHTML = formatTimer(timer);
-}
-
-function beginGame () {
-  loadDict();
-  document.querySelector('.timer-score-box').classList.remove("hidden");
-  document.getElementById('start-btn').classList.add('hidden');
-  initWord(newWord());
-  myInterval = setInterval(myTimer,"1000");
-}
-
-
 
 // UI
 
+
 document.getElementById('start-btn').addEventListener('click',beginGame);
 document.getElementById('enter-btn').addEventListener('click', checkWord);
-document.getElementById('pass-btn')passButton.addEventListener('click', refresh);
+document.getElementById('pass-btn').addEventListener('click', refresh);
+
+document.getElementById('copy-btn').addEventListener('click', function(){
+  navigator.clipboard.writeText(document.getElementById('description').innerHTML);
+});

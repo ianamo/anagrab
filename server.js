@@ -3,6 +3,7 @@ var parser = require('body-parser');
 var app = express();
 var dict = require('check-word')
 wordChecker = dict('en');
+let fs = require('fs');
 
 
 app.use(express.static(__dirname + '/public'));
@@ -20,6 +21,13 @@ app.get('/checkword/', function(req, res){
 	const exists = wordChecker.check(key);
 	res.setHeader('Content-Type', 'application/json');
 	res.end(JSON.stringify({result:exists}));
+});
+
+app.get('/randword/', function (req, res){
+	const words = fs.readFileSync(__dirname+'/en.txt').toString().split("\n");
+	const randomWord = words[Math.floor(Math.random()*words.length)];
+	res.setHeader('Content-Type','application/json');
+	res.end(JSON.stringify({random:randomWord}));
 });
 
 

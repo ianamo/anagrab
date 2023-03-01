@@ -14,8 +14,15 @@ a {
   font-family: 'Aboreto', cursive;
 }
 
-#description {
-  padding: 2% 12%;
+#description-container {
+  width: 44%;
+  padding: 1%;
+  margin: 4%;
+  border: solid black 4px;
+  border-radius: 22px;
+  margin-left: 10%;
+  box-shadow: black 1px 1px 4px;
+  background-color: antiquewhite;
   font-size: 2rem;
 }
 
@@ -24,6 +31,15 @@ a {
   font-weight: bolder;
   margin: 2%;
   font-size: 1rem;
+  background-color: navajowhite;
+  border-radius: 13px;
+}
+
+#copy-btn {
+  float: right;
+  border-radius: 13px;
+  margin-top: -39px;
+  background-color: navajowhite;
 }
 
 .timer-score-box {
