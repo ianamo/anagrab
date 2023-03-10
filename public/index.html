@@ -12,7 +12,7 @@
 <h1 id="title">Anagrab</h1>
 
 <div id="description-container">
-<span id="description">Welcome to Anagrab. Your goal is to work your way through a stack of five words as quickly as possible by turning all or some letters of the word into new words below. Press <img class="icon" src="images/enter.png"> to enter your word. The clock is ticking! If you run out of anagrams to make, you can skip <img class="icon" src="images/next.png"> to the next word, but each "orphaned" tile will count for a fifteen second penalty! Press start to begin.</span><br> <button id="start-btn" class="btn">START</button>
+<span id="description">In Anagrab, you turn a word into new words! Press <img class="icon" src="images/enter.png"> to enter your word. If you run out of anagrams to make, you can skip <img class="icon" src="images/next.png"> to the next word, but each tile left behind will be counted as an "orphan." In timed mode, you will get a daily stack of five words to work through, with each orphan tile counting as a fifteen second penalty as you work against the clock! In endurance mode, you will get an endless supply of random words, but the game is over once you accumulate more than four orphans! Please select timed or endurance mode below.</span><br> <button id="start-btn" class="btn">TIMED</button><button id="endure-btn" class="btn">ENDURANCE</button>
 <button id="copy-btn" class="btn hidden"><img class="icon" src="images/copy.png"></button>
 </div>
 
@@ -33,6 +33,23 @@
 </div>
 
 <footer>&copy; 2023 Ian Mosley. <a href="https://www.flaticon.com/free-icons/enter" title="enter icons">Enter icons created by mavadee - Flaticon</a> <a href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Roundicons - Flaticon</a> <a href="https://www.flaticon.com/free-icons/copy" title="copy icons">Copy icons created by Freepik - Flaticon</a></footer>
+
+<script>
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev) {
+  ev.preventDefault();
+  var data = ev.dataTransfer.getData("text");
+  const myDropper = document.getElementById(data);
+  ev.target.appendChild(myDropper);
+}
+</script>
 
 <script type="module" src="script.js"></script>
 </body>

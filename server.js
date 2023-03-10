@@ -4,7 +4,7 @@ var app = express();
 var dict = require('check-word')
 wordChecker = dict('en');
 let fs = require('fs');
-
+const words = fs.readFileSync(__dirname+'/en.txt').toString().split("\n");
 
 app.use(express.static(__dirname + '/public'));
 app.use(parser.urlencoded({extended: true}));
@@ -24,7 +24,6 @@ app.get('/checkword/', function(req, res){
 });
 
 app.get('/randword/', function (req, res){
-	const words = fs.readFileSync(__dirname+'/en.txt').toString().split("\n");
 	const randomWord = words[Math.floor(Math.random()*words.length)];
 	res.setHeader('Content-Type','application/json');
 	res.end(JSON.stringify({random:randomWord}));

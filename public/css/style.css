@@ -15,7 +15,7 @@ a {
 }
 
 #description-container {
-  width: 44%;
+  width: 49%;
   padding: 1%;
   margin: 4%;
   border: solid black 4px;
@@ -27,6 +27,15 @@ a {
 }
 
 #start-btn {
+  padding: 6px;
+  font-weight: bolder;
+  margin: 2%;
+  font-size: 1rem;
+  background-color: navajowhite;
+  border-radius: 13px;
+}
+
+#endure-btn {
   padding: 6px;
   font-weight: bolder;
   margin: 2%;

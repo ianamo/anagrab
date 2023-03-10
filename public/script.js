@@ -3,28 +3,26 @@ import {dict} from "./words.js";
 // global variables
 
 let words = [];
+let wordsCompleted = 0;
 let row = document.getElementById('word-row');
 let entry = document.getElementById('entry-row');
 let timer = 0;
 let orphans = 0;
 let currentWord = "";
+let perpetualMode = false;
 var myInterval = null;
 const date = new Date().getDate();
 
 // Functions
 
 function anaString() {
-  return ("ANAGRAB("+date.toString()+") ⏲️"+formatTimer(timer)+' 🙁'+orphans.toString());
+  const score = perpetualMode? "(Endurance) ☑️"+wordsCompleted : '#'+date.toString()+ " ⏲️"+formatTimer(timer)+' 🙁'+orphans.toString();
+  return ("ANAGRAB "+score);
 }
 
 function myTimer () {
   timer++;
   document.getElementById('timer').innerHTML = formatTimer(timer);
-}
-
-function newWord() { // get a new word from the stack, keep track of what word we are currently using
-  currentWord = words.pop();
-  return currentWord;
 }
 
 function loadDict() {
@@ -36,9 +34,7 @@ function formatTimer(seconds){
 }
 
 function initWord(str) { // set up a new word on the page
-
-  document.getElementById('description').innerHTML = "Words remaining: " + words.length+'.';
-
+  currentWord = str;
   for (let i =0;i<str.length;i++) {
     let squareBox = document.createElement('div'); // setup box for tile
     squareBox.className = 'empty-box';
@@ -65,11 +61,16 @@ function initWord(str) { // set up a new word on the page
     blank.className = 'empty-box';
     entry.appendChild(blank);
   }
-  var allBlanks = document.querySelectorAll('.empty-box'); // all boxes need drag & drop functions
-  for (var blank of allBlanks){
-    blank.setAttribute("ondrop","drop(event)");
-    blank.setAttribute("ondragover","allowDrop(event)");
-  }
+  
+  let allBlanks = Array.from(document.querySelectorAll('.empty-box'));
+  allBlanks.forEach(b=>{
+    b.setAttribute("ondrop","drop(event)");
+    b.setAttribute("ondragover","allowDrop(event)");
+  });
+}
+
+function fetchWord() {
+  perpetualMode ? randWord() : initWord(words.pop());
 }
 
 function firstEmpty(searchRow) { // find first empty node
@@ -91,10 +92,10 @@ function getWord() { // "read" the word on the entry row
 }
 
 function logWord(bool) { // if word exists, clear it out; if all tiles have been used, get a new word
-  if (bool=='true') {
+  if (bool) {
     clearTiles();
     if (isEmpty()) {
-      refresh();
+      perpetualMode? perpetualRefresh() : refresh();
     }
   }
   else {
@@ -133,44 +134,43 @@ function randWord () { // interact with server to get random word
     method: 'GET',
 
   }).then(response => response.json())
-    .then(response => {console.log((JSON.stringify(response.random)))});
+    .then(response => 
+      initWord(response.random))
 }
 
-// drag & drop  functionality for tiles
-
-function allowDrop(ev) {
-  ev.preventDefault();
+function endPerpetual() {
+  document.getElementById('description').innerHTML = anaString();
+  clearRows();
+  document.getElementById('copy-btn').classList.remove('hidden');
 }
 
-function drag(ev) {
-  ev.dataTransfer.setData("text", ev.target.id);
-}
-
-function drop(ev) {
-  ev.preventDefault();
-  var data = ev.dataTransfer.getData("text");
- const myDropper = document.getElementById(data);
- ev.target.appendChild(myDropper);
+function updateText() {
+  const updateString = perpetualMode? 'so far: ' + wordsCompleted : ' left to go: ' + words.length;
+  document.getElementById('description').innerHTML = 'Words '+updateString;
 }
 
 // button UI functions
 
 function beginGame () {
-  loadDict();
+  if (perpetualMode == false){
+    loadDict();
+    myInterval = setInterval(myTimer,"1000");
+  }
+  updateText();
   document.querySelector('.timer-score-box').classList.remove("hidden");
   document.getElementById('start-btn').classList.add('hidden');
-  initWord(newWord());
-  myInterval = setInterval(myTimer,"1000");
+  document.getElementById('endure-btn').classList.add('hidden');
+  fetchWord();
 }
 
 function checkWord() { // communicate with backend to see if word exists
   const str = getWord();
   if (str == currentWord) { // keep user from just recycling word
     console.log("Nice try, wise guy");
-    logWord('false');
+    logWord(false);
     return false;
   } else if (str.length == 1 && ['a','i','o'].includes(str)) {
-    logWord('true');
+    logWord(true);
     return true;
   } else {
 
@@ -178,7 +178,7 @@ function checkWord() { // communicate with backend to see if word exists
     method: 'GET',
 
   }).then(response => response.json())
-    .then(response => {logWord(JSON.stringify(response.result))});
+    .then(response => {logWord(response.result)});
   }
 }
 
@@ -191,7 +191,8 @@ function refresh() { // assess penalty if needed and set up next word; if no nex
   }
   clearRows();
   if (words[0]) {
-    initWord(newWord());  
+    updateText();
+    fetchWord();  
   } else {
     clearInterval(myInterval);
     document.getElementById('description').innerHTML = anaString();
@@ -199,12 +200,26 @@ function refresh() { // assess penalty if needed and set up next word; if no nex
   }
 }
 
+function perpetualRefresh() {
+  wordsCompleted++;
+  orphans += countTiles();
+  document.getElementById('timer').innerHTML = orphans.toLocaleString('en-us',{minimumIntegerDigits:2});
+  clearRows();
+  updateText();
+  orphans > 4 ? endPerpetual() : fetchWord();
+}
+
 // UI
 
 
 document.getElementById('start-btn').addEventListener('click',beginGame);
 document.getElementById('enter-btn').addEventListener('click', checkWord);
-document.getElementById('pass-btn').addEventListener('click', refresh);
+document.getElementById('pass-btn').addEventListener('click', function(){ 
+  perpetualMode? perpetualRefresh() : refresh()});
+document.getElementById('endure-btn').addEventListener('click', function (){
+  perpetualMode = true;
+  beginGame();
+});
 
 document.getElementById('copy-btn').addEventListener('click', function(){
   navigator.clipboard.writeText(document.getElementById('description').innerHTML);
